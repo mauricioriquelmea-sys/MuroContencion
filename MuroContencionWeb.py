@@ -22,7 +22,7 @@ def get_ka(phi, delta, beta, i):
     return num / (den * term_sqrt**2)
 
 def main():
-    st.title("⚓ STRUCTURAL LAB: VERIFICACIÓN DE MUROS (NCh 433)")
+    st.title("🧱 VERIFICACIÓN ESTRUCTURAL DE MUROS DE CONTENCIÓN")
     st.markdown("---")
 
     # --- SIDEBAR: INPUTS Y REFERENCIA ---
