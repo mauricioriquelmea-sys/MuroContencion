@@ -89,19 +89,29 @@ def main():
     # Valores de diseño basados en memoria [cite: 292, 294, 303, 432, 434, 446]
     f_est, f_sis = st.columns(2)
     
+   # --- SECCIÓN 2: ESTABILIDAD (CUATRO FACTORES) ---
+    st.subheader("📊 Factores de Seguridad y Estabilidad")
+    
+    # Cálculos referenciales basados en memoria VS-CS-01-A
+    f_est, f_sis = st.columns(2)
+    
     with f_est:
         st.write("**Caso Estático**")
+        # Primera Línea: Volcamiento
+        st.metric("FS Volcamiento", "7.40", "Min 1.5")
+        # Segunda Línea: Deslizamiento (Dos columnas)
         c1, c2 = st.columns(2)
-        c1.metric("FS Volcamiento", "7.40", "Min 1.5") # [cite: 303]
-        c2.metric("FSD Sin Pasivo", "2.60", "Min 1.5") # [cite: 294, 297]
-        st.metric("FSD Con Pasivo", "3.80", "Min 2.0") # [cite: 292, 293]
+        c1.metric("FS Deslizamiento (sin pasivo)", "2.60", "Min 1.5")
+        c2.metric("FS Deslizamiento (con pasivo)", "3.80", "Min 1.5")
 
     with f_sis:
         st.write("**Caso Sísmico (Mononobe-Okabe)**")
+        # Primera Línea: Volcamiento
+        st.metric("FS Volcamiento", "2.90", "Min 1.5")
+        # Segunda Línea: Deslizamiento (Dos columnas)
         c3, c4 = st.columns(2)
-        c3.metric("FS Volcamiento", "2.90", "Min 1.5") # [cite: 446]
-        c4.metric("FSD Sin Pasivo", "1.20", "Min 1.2") # [cite: 434, 435]
-        st.metric("FSD Con Pasivo", "1.80", "Min 1.5") # [cite: 432, 433]
+        c3.metric("FS Deslizamiento (sin pasivo)", "1.20", "Min 1.5")
+        c4.metric("FS Deslizamiento (con pasivo)", "1.80", "Min 1.5")
 
     st.divider()
 
