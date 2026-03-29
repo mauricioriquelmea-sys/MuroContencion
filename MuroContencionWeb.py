@@ -69,7 +69,7 @@ def main():
             (np.cos(delta_rad + theta) * np.cos(i_rad))))**2)
     kas = num_s / den_s
 
-  # --- SECCIÓN 1: REPRESENTACIÓN GEOMÉTRICA ESTRATIGRÁFICA ---
+# --- SECCIÓN 1: REPRESENTACIÓN GEOMÉTRICA ESTRATIGRÁFICA ---
     st.subheader("📐 Geometría Real y Contexto Geotécnico")
     
     # Recuperación de variables dinámicas [cite: 80-85, 96-98]
@@ -121,6 +121,7 @@ def main():
     ax_g.legend(loc='upper left', bbox_to_anchor=(1, 1), title="Componentes")
     
     st.pyplot(fig_g)
+
 
     
     # 2. Relleno Interior (Rosado) con pendiente 'i' [cite: 97, 115, 166]
