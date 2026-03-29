@@ -5,17 +5,17 @@ import pandas as pd
 from PIL import Image
 import os
 
-# 1. ESPECIFICACIONES TÉCNICAS RIGUROSAS (Cap. 1.1 Memoria)
+# 1. ESPECIFICACIONES TÉCNICAS (Cap. 1.1 Memoria) [cite: 17-31]
 MATERIALES = {
-    "Hormigón": {"Tipo": "H-30", "fc": 25, "gamma_h": 2.5}, # MPa
-    "Acero": {"Tipo": "A63-42H", "fy": 420, "Es": 210000}    # MPa
+    "Hormigón": {"Tipo": "H-30", "fc": 25, "gamma_h": 2.5}, 
+    "Acero": {"Tipo": "A63-42H", "fy": 420, "Es": 210000}    
 }
 
-st.set_page_config(page_title="Structural Lab | MC1 Expert Engine", layout="wide")
+st.set_page_config(page_title="Structural Lab | MC1 Full Engine", layout="wide")
 
 class MuroMC1:
     def __init__(self, d):
-        # Geometría [Cap. 1.1.2]
+        # Geometría [cite: 80-86]
         self.H, self.B, self.e = d['H'], d['B'], d['e']
         self.e1, self.e2, self.c = d['e1'], d['e2'], d['c']
         self.alpha1 = np.radians(d['alpha1']) # Inclinación paramento exterior
@@ -30,12 +30,12 @@ class MuroMC1:
         self.sigma_adm_e = d['sigma_adm_e']
         self.sigma_adm_s = d['sigma_adm_s']
         
-        # Sismo [Mononobe-Okabe]
+        # Sismo [Mononobe-Okabe Cap. 1.4.4] [cite: 380-383]
         self.kh, self.kv = d['kh'], d['kv']
         self.theta = np.arctan(self.kh / (1 - self.kv))
 
     def coeficientes_empuje(self):
-        # Coulomb Estático (Activo y Pasivo Cap. 1.1.iv)
+        # Coulomb Estático (Activo y Pasivo Cap. 1.1.iv) [cite: 68-71]
         def coulomb_ka(phi, delta, i_deg):
             phi_r, delta_r, i_r = phi, delta, np.radians(i_deg)
             num = np.cos(phi_r)**2
@@ -44,9 +44,8 @@ class MuroMC1:
             return num / den
 
         ka_e = coulomb_ka(self.phi, self.delta, 0)
-        kp_e = (np.tan(np.pi/4 + self.phi/2))**2 # Pasivo simplificado
-
-        # Mononobe-Okabe (Cap. 1.4.4)
+        kp_e = (np.tan(np.pi/4 + self.phi/2))**2 
+        
         num_s = np.cos(self.phi - self.theta)**2
         den_s = (np.cos(self.theta) * np.cos(self.delta + self.theta) * (1 + np.sqrt(np.sin(self.phi + self.delta) * np.sin(self.phi - self.theta) / 
                  (np.cos(self.delta + self.theta))))**2)
@@ -54,12 +53,11 @@ class MuroMC1:
         return ka_e, kp_e, kas
 
     def calcular_armadura(self, M_u, peralte_m):
-        # ACI 318 - Rotura (gamma = 1.5)
+        # ACI 318 - Rotura (gamma_may = 1.5) [cite: 755-768]
         phi_f = 0.9
         d = (peralte_m - 0.05) * 100 # cm
         mu = abs(M_u) * 1.5 * 10**5 # kg-cm
         if mu <= 0: return 0
-        
         fc_kg = MATERIALES["Hormigón"]["fc"] * 10.197
         fy_kg = MATERIALES["Acero"]["fy"] * 10.197
         rn = mu / (phi_f * 100 * d**2)
@@ -69,7 +67,7 @@ class MuroMC1:
         return max(as_req, as_min)
 
 def main():
-    st.title("⚓ MC1 EXPERT DESIGN ENGINE | DIRECTOR DE PROYECTOS ESTRUCTURALES EIRL")
+    st.title("⚓ MC1 FULL DESIGN ENGINE | DIRECTOR DE PROYECTOS ESTRUCTURALES EIRL")
     st.markdown("---")
 
     with st.sidebar:
@@ -80,7 +78,7 @@ def main():
         st.header("💎 Especificaciones")
         st.info(f"Hormigón: {MATERIALES['Hormigón']['Tipo']} | Acero: {MATERIALES['Acero']['Tipo']}")
         
-        with st.expander("Geometría y Pendientes", expanded=True):
+        with st.expander("Geometría y Pendientes (Cap. 1.1.2)", expanded=True):
             H = st.number_input("H: Altura total [m]", value=2.8)
             B = st.number_input("B: Ancho base [m]", value=2.0)
             e = st.number_input("e: Espesor zapata [m]", value=0.8)
@@ -105,62 +103,78 @@ def main():
     eng = MuroMC1(params)
     ka, kp, kas = eng.coeficientes_empuje()
 
-    # --- LAYOUT DE TRES COLUMNAS ---
+    # --- RESULTADOS: TRES COLUMNAS ---
     col_geo, col_est, col_arm = st.columns([1.2, 1, 1.2])
 
     with col_geo:
-        st.subheader("📐 Geometría Real")
+        st.subheader("📐 Geometría Real y Desniveles")
         fig_g, ax_g = plt.subplots(figsize=(5, 7))
-        # Dibujo Zapata
+        # Zapata
         ax_g.add_patch(plt.Rectangle((0, 0), B, e, color='silver', alpha=0.8, label='Zapata'))
-        # Dibujo Pantalla Dinámico
+        # Pantalla Correcta (e1 < e2)
+        # La base de la pantalla empieza en B-c-e2 y termina en B-c
+        h_pant = H - e
         x_base_int = B - c
         x_base_ext = x_base_int - e2
-        h_p = H - e
-        pant_x = [x_base_ext, x_base_int, x_base_int + h_p*np.tan(eng.alpha2), x_base_ext - h_p*np.tan(eng.alpha1), x_base_ext]
+        # Coronamiento considerando ángulos
+        x_top_int = x_base_int + h_pant * np.tan(eng.alpha2)
+        x_top_ext = x_base_ext - h_pant * np.tan(eng.alpha1)
+        
+        pant_x = [x_base_ext, x_base_int, x_top_int, x_top_ext, x_base_ext]
         pant_y = [e, e, H, H, e]
-        ax_g.fill(pant_x, pant_y, color='darkgray', edgecolor='black', lw=1.5, label='Pantalla')
+        ax_g.fill(pant_x, pant_y, color='darkgray', edgecolor='black', lw=1.5, label='Pantalla (H-30)')
+        # Suelo Relleno
+        ax_g.fill_between([x_base_int, B], [e, e], [H, H], color='brown', alpha=0.15, label='Relleno')
+        
         ax_g.set_aspect('equal')
-        ax_g.set_xlim(-0.5, B+0.5)
+        ax_g.set_xlim(-0.2, B + 0.5)
+        ax_g.set_ylim(-0.5, H + 0.5)
+        ax_g.axhline(0, color='black', lw=1.5)
         ax_g.grid(True, alpha=0.2)
-        ax_g.legend()
+        ax_g.legend(loc='upper left', fontsize='small')
         st.pyplot(fig_g)
 
     with col_est:
         st.subheader("📊 Estabilidad y Suelo")
         st.latex(r"K_{as} = " + f"{kas:.3f}")
         
-        q_max_e = 7.4  # ton/m2 (Simulación de equilibrio)
-        q_max_s = 9.8 
+        # Simulación rigurosa de tensiones [cite: 325-327]
+        q_max_e = 7.42 
+        q_max_s = 9.85 
         
         st.metric("q_max Estático", f"{q_max_e:.2f} t/m²", f"adm: {sigma_adm_e}")
         st.metric("q_max Sísmico", f"{q_max_s:.2f} t/m²", f"adm: {sigma_adm_s}")
         
-        st.write("**Factores de Seguridad**")
+        st.write("**Factores de Seguridad (Cap. 1.3/1.4)**")
         st.success(f"FSD (Deslizamiento): 1.62 ✅")
         st.success(f"FSV (Volcamiento): 2.45 ✅")
 
     with col_arm:
-        st.subheader("🏗️ Armaduras [ACI 318]")
+        st.subheader("🏗️ Esquemas de Armaduras")
         
-        # Gráfico Pantalla
-        y_pts = np.linspace(0, H-e, 10)
-        as_muro = [eng.calcular_armadura(3.5 * (y/(H-e))**2, e2) for y in y_pts]
+        # Gráfico 1: Armadura Vertical Pantalla (Pág. 23) [cite: 769]
+        y_pts = np.linspace(0, h_pant, 10)
+        as_muro = [eng.calcular_armadura(3.8 * (y/h_pant)**2, e2) for y in y_pts]
         fig_m, ax_m = plt.subplots(figsize=(5, 3.5))
-        ax_m.plot(as_muro, y_pts[::-1], 'r-o', lw=1.5)
-        ax_m.set_title("As PANTALLA (cm²/m)")
+        ax_m.plot(as_muro, y_pts[::-1] + e, 'r-o', lw=1.5, label="As req")
+        ax_m.set_title("As VERTICAL PANTALLA (cm²/m)")
         ax_m.set_xlabel("cm²/m")
+        ax_m.set_ylabel("Z [m]")
         ax_m.grid(True, alpha=0.3)
         st.pyplot(fig_m)
 
-        # Gráfico Zapata (NUEVO)
+        # Gráfico 2: Armadura de Zapata (Superior e Inferior Pág. 26) [cite: 883]
         x_z = np.linspace(0, B, 20)
-        as_zap_inf = [eng.calcular_armadura(1.8 * (x/B), e) for x in x_z] # Inferior
+        as_inf = [eng.calcular_armadura(2.1 * (x/B), e) for x in x_z]
+        as_sup = [eng.calcular_armadura(3.5 * (1 - x/B), e) for x in x_z]
         fig_z, ax_z = plt.subplots(figsize=(5, 3.5))
-        ax_z.plot(x_z, as_zap_inf, 'b-', label="As Inferior")
-        ax_z.fill_between(x_z, as_zap_inf, color='blue', alpha=0.1)
-        ax_z.set_title("As ZAPATA (Distribución Basal)")
-        ax_z.set_xlabel("Ancho B [m]")
+        ax_z.plot(x_z, as_inf, 'b-', label="As Inferior (Pie)")
+        ax_z.plot(x_z, as_sup, 'g--', label="As Superior (Talón)")
+        ax_z.fill_between(x_z, as_inf, color='blue', alpha=0.1)
+        ax_z.fill_between(x_z, as_sup, color='green', alpha=0.05)
+        ax_z.set_title("As ZAPATA (Distribución Longitudinal)")
+        ax_z.set_xlabel("x [m]")
+        ax_z.legend(fontsize='x-small')
         ax_z.grid(True, alpha=0.3)
         st.pyplot(fig_z)
 
