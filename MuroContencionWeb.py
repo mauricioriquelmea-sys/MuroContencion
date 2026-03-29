@@ -46,7 +46,7 @@ def main():
 
         with st.expander("Contexto de Rellenos (Cap. 1.1.3)", expanded=True):
             hr = st.number_input("hr: Altura relleno interior [m]", value=2.8)
-            hre = st.number_input("hre: Altura relleno exterior [m]", value=0.8)
+            hre = st.number_input("hre: Altura relleno exterior [m]", value=1.0)
             i_deg = st.number_input("i: Inclinación relleno [°]", value=10.0)
 
         with st.expander("Geotecnia y Sismo (Cap. 1.1.4/6)", expanded=True):
@@ -69,45 +69,60 @@ def main():
             (np.cos(delta_rad + theta) * np.cos(i_rad))))**2)
     kas = num_s / den_s
 
-    # --- SECCIÓN 1: REPRESENTACIÓN GEOMÉTRICA ESTRATIGRÁFICA ---
+   # --- SECCIÓN 1: REPRESENTACIÓN GEOMÉTRICA ESTRATIGRÁFICA ---
     st.subheader("📐 Geometría Real y Contexto Geotécnico")
+    
+    # Definición de variables de contexto según memoria 
+    hr_val = hr       # Altura relleno interior (sidebar)
+    hre_val = 1.0     # Altura relleno exterior solicitada (fijo 1.0m)
+    i_rad = np.radians(i_deg) # Inclinación relleno interior
     
     fig_g, ax_g = plt.subplots(figsize=(12, 6))
     
-    # 1. Suelo de Fundación
+    # 1. Suelo de Fundación (y < 0)
     ax_g.add_patch(plt.Rectangle((-1.5, -1), B + 3, 1, color='#efe9db', alpha=0.9, label='Suelo de Fundación'))
     
-    # 2. Zapata
+    # 2. Relleno Interior (Rosado) con pendiente 'i' [cite: 97, 115, 166]
+    # Se proyecta desde el trasdós (punto top interior de la pantalla)
+    h_pant = H - e
+    x_base_int = B - c
+    x_top_int = x_base_int + h_pant * np.tan(np.radians(alpha2))
+    
+    x_fill_end = B + 1.2
+    y_fill_end = hr_val + (x_fill_end - x_top_int) * np.tan(i_rad)
+    
+    fill_int_x = [x_top_int, x_fill_end, x_fill_end, x_base_int, x_top_int]
+    fill_int_y = [hr_val, y_fill_end, e, e, hr_val]
+    ax_g.fill(fill_int_x, fill_int_y, color='#f2d7d5', alpha=0.6, label='Relleno Interior')
+    
+    # 3. Relleno Exterior (Café Achurado) - Lado Pasivo [cite: 70, 98, 182]
+    # Se dibuja desde y=0 (sello fundación) hasta hre=1.0m con patrón de achurado
+    x_base_ext = x_base_int - e2
+    ax_g.fill_between([-1.5, x_base_ext], 0, hre_val, 
+                     facecolor='#d5dbdb', alpha=0.5, hatch='///', edgecolor='#85929e', 
+                     label='Relleno Exterior (Pasivo h=1.0m)')
+    
+    # 4. Zapata (Hormigón G25) [cite: 82, 101, 109]
     ax_g.add_patch(plt.Rectangle((0, 0), B, e, color='silver', alpha=1.0, edgecolor='black', lw=1.2, label='Zapata'))
     
-    # 3. Pantalla (e1 corona, e2 base)
-    x_base_int = B - c
-    x_base_ext = x_base_int - e2
-    x_top_int = x_base_int + h_pant * np.tan(np.radians(alpha2))
+    # 5. Pantalla (e1 corona, e2 base) [cite: 84, 85, 103, 104]
     x_top_ext = x_top_int - e1 
     pant_x = [x_base_ext, x_base_int, x_top_int, x_top_ext, x_base_ext]
     pant_y = [e, e, H, H, e]
     ax_g.fill(pant_x, pant_y, color='darkgray', edgecolor='black', lw=1.5, label=f'Pantalla ({sel_g})')
     
-    # 4. Relleno Interior (Inclinado i)
-    x_fill_end = B + 1.2
-    y_fill_end = hr + (x_fill_end - x_top_int) * np.tan(i_rad)
-    fill_int_x = [x_top_int, x_fill_end, x_fill_end, x_base_int, x_top_int]
-    fill_int_y = [hr, y_fill_end, e, e, hr]
-    ax_g.fill(fill_int_x, fill_int_y, color='#f2d7d5', alpha=0.6, label='Relleno Interior')
-    
-    # 5. Relleno Exterior (Lado Pasivo)
-    ax_g.fill_between([-1.2, x_base_ext], [e, e], [hre, hre], color='#d5dbdb', alpha=0.7, label='Relleno Exterior (Pasivo)')
-    
+    # Configuración de Ejes y Estética
     ax_g.set_aspect('equal')
     ax_g.set_xlim(-1.2, B + 1.2)
     ax_g.set_ylim(-1.1, max(H, y_fill_end) + 0.5)
-    ax_g.axhline(0, color='black', lw=1.8) 
+    ax_g.axhline(0, color='black', lw=2.0) # Nivel de Sello de Fundación
     ax_g.grid(True, linestyle=':', alpha=0.3)
+    
+    # Leyenda desplazada para evitar obstrucción
     ax_g.legend(loc='upper left', bbox_to_anchor=(1, 1), title="Componentes")
+    
     st.pyplot(fig_g)
 
-    st.divider()
 
     # --- SECCIÓN 2: ESTABILIDAD GLOBAL (CUATRO FACTORES) ---
     st.subheader("📊 Factores de Seguridad y Estabilidad")
