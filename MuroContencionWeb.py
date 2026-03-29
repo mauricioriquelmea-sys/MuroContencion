@@ -83,11 +83,7 @@ def main():
 
     st.divider()
 
-    # --- SECCIÓN 2: ESTABILIDAD (CUATRO FACTORES) ---
-    st.subheader("📊 Factores de Seguridad y Estabilidad")
-    
-    # Valores de diseño basados en memoria [cite: 292, 294, 303, 432, 434, 446]
-    f_est, f_sis = st.columns(2)
+
     
    # --- SECCIÓN 2: ESTABILIDAD (CUATRO FACTORES) ---
     st.subheader("📊 Factores de Seguridad y Estabilidad")
