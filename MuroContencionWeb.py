@@ -95,7 +95,7 @@ def main():
     x_base_ext = x_base_int - e2
     ax_g.fill_between([-1.5, x_base_ext], 0, hre_val, 
                      facecolor='#d5dbdb', alpha=0.5, hatch='///', edgecolor='#85929e', 
-                     label=f'Relleno Exterior (Pasivo h={hre_val}m)')
+                     label=f'Relleno Exterior (hre={hre_val}m)')
     
     # 4. Zapata [cite: 82, 226]
     ax_g.add_patch(plt.Rectangle((0, 0), B, e, color='silver', alpha=1.0, edgecolor='black', lw=1.2, label='Zapata'))
