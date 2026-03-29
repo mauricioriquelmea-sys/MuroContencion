@@ -34,7 +34,7 @@ def main():
             
             gamma_h = st.number_input("γ Hormigón [t/m³]", value=2.5)
 
-        with st.expander("Geometría Crítica (Cap. 1.1.2)", expanded=True):
+        with st.expander("Geometría Crítica", expanded=True):
             H = st.number_input("H: Altura total muro [m]", value=2.8) # [cite: 80]
             B = st.number_input("B: Ancho base zapata [m]", value=2.0) # [cite: 81]
             e = st.number_input("e: Espesor zapata [m]", value=0.8) # [cite: 82]
@@ -44,12 +44,12 @@ def main():
             alpha1 = st.number_input("α1: Pend. Exterior [°]", value=0.0)
             alpha2 = st.number_input("α2: Pend. Interior [°]", value=2.0)
 
-        with st.expander("Contexto de Rellenos (Cap. 1.1.3)", expanded=True):
+        with st.expander("Contexto de Rellenos", expanded=True):
             hr = st.number_input("hr: Altura relleno interior [m]", value=2.8) # [cite: 96]
             hre = st.number_input("hre: Altura relleno exterior [m]", value=1.0) # [cite: 98]
             i_deg = st.number_input("i: Inclinación relleno [°]", value=10.0) # [cite: 97]
 
-        with st.expander("Geotecnia y Sismo (Cap. 1.1.4/6)", expanded=True):
+        with st.expander("Geotecnia y Sismo", expanded=True):
             kh = st.number_input("kh (Horiz)", value=0.15) # [cite: 134]
             kv = st.number_input("kv (Vert)", value=0.075) # [cite: 135]
             phi = st.number_input("φ: Fricción suelo [°]", value=35.0) # [cite: 121]
