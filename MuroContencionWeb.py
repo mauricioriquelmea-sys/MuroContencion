@@ -17,29 +17,37 @@ def main():
         if os.path.exists("F1.jpg"):
             st.image("F1.jpg", use_container_width=True)
         
-        # 💎 ESPECIFICACIONES DE MATERIALES MODIFICABLES [cite: 17, 89, 90]
+        # 💎 ESPECIFICACIONES DE MATERIALES RESTRINGIDAS [cite: 17, 107-110]
         st.header("💎 Especificaciones de Materiales")
-        with st.expander("Calidades (Hormigón G y Acero A)", expanded=True):
-            fc_mpa = st.number_input("f'c Hormigón (G) [MPa]", value=25.0, help="Resistencia cilíndrica (G25 = 25 MPa)") # [cite: 28, 109]
-            fy_mpa = st.number_input("fy Acero [MPa]", value=420.0, help="Tensión de fluencia (A63-42H = 420 MPa)") # [cite: 31, 108]
-            gamma_h = st.number_input("γ Hormigón [t/m³]", value=2.5) # [cite: 30, 87]
-            E_s = st.number_input("Es Acero [MPa]", value=210000.0) # [cite: 24, 31, 107]
+        with st.expander("Calidades Normativas", expanded=True):
+            # Selección de Hormigón G (Resistencia Cúbica) [cite: 19, 90]
+            opciones_g = [17, 20, 25, 30, 35, 40, 45, 50]
+            grado_g = st.selectbox("Grado Hormigón (G)", opciones_g, index=2, help="Resistencia cúbica en MPa")
+            fc_mpa = float(grado_g) # f'c cilíndrico para cálculo [cite: 28, 109]
+            
+            # Selección de Acero (Fu-Fy) 
+            opciones_a = {"A63-42H": 420.0, "A44-28H": 280.0}
+            tipo_a = st.selectbox("Tipo de Acero", list(opciones_a.keys()), index=0)
+            fy_mpa = opciones_a[tipo_a]
+            
+            gamma_h = st.number_input("γ Hormigón [t/m³]", value=2.5) # [cite: 30, 87, 106]
+            E_s = st.number_input("Es Acero [MPa]", value=210000.0) # [cite: 24, 88, 107]
 
         # 📐 GEOMETRÍA Y PENDIENTES [cite: 50, 79]
         with st.expander("Geometría y Pendientes (Cap. 1.1.2)", expanded=True):
-            H = st.number_input("H: Altura total [m]", value=2.8) # [cite: 80]
-            B = st.number_input("B: Ancho base [m]", value=2.0) # [cite: 81]
-            e = st.number_input("e: Espesor zapata [m]", value=0.8) # [cite: 82]
+            H = st.number_input("H: Altura total [m]", value=2.8) # [cite: 80, 99]
+            B = st.number_input("B: Ancho base [m]", value=2.0) # [cite: 81, 100]
+            e = st.number_input("e: Espesor zapata [m]", value=0.8) # [cite: 82, 101]
             e1 = st.number_input("e1: Corona (Superior) [m]", value=0.2) # [cite: 84, 103]
             e2 = st.number_input("e2: Base pantalla (Inferior) [m]", value=0.3) # [cite: 85, 104]
             c = st.number_input("c: Talón trasero [m]", value=1.2) # [cite: 83, 102]
             alpha1 = st.number_input("α1: Pend. Exterior [°]", value=0.0) # [cite: 86]
-            alpha2 = st.number_input("α2: Pend. Interior [°]", value=2.0) # [cite: 105]
+            alpha2 = st.number_input("α2: Pend. Interior [°]", value=2.0) # [cite: 105, 152]
 
         # 🌱 GEOTECNIA Y SISMO [cite: 120, 133]
         with st.expander("Geotecnia y Sismo", expanded=True):
-            kh = st.number_input("kh (Horiz)", value=0.15) # [cite: 134]
-            kv = st.number_input("kv (Vert)", value=0.075) # [cite: 135]
+            kh = st.number_input("kh (Horiz)", value=0.15) # [cite: 134, 136]
+            kv = st.number_input("kv (Vert)", value=0.075) # [cite: 135, 137]
             q_est = st.number_input("q: S/C Estática [t/m²]", value=0.5) # [cite: 130]
             q_sis = st.number_input("qs: S/C Sísmica [t/m²]", value=0.2) # [cite: 131]
             phi = st.number_input("φ: Fricción [°]", value=35.0) # [cite: 121, 126]
@@ -50,8 +58,8 @@ def main():
     # --- MOTOR DE CÁLCULO ---
     h_pant = H - e
     phi_rad = np.radians(phi)
-    delta_rad = phi_rad / 3 # [cite: 95]
-    theta = np.arctan(kh / (1 - kv)) # [cite: 382]
+    delta_rad = phi_rad / 3 # [cite: 95, 113, 127]
+    theta = np.arctan(kh / (1 - kv)) # [cite: 382, 406]
 
     # Coeficiente Sísmico Mononobe-Okabe [cite: 383]
     num_s = np.cos(phi_rad - theta)**2
@@ -66,23 +74,23 @@ def main():
         st.subheader("📐 Geometría Real")
         fig_g, ax_g = plt.subplots(figsize=(5, 7))
         
-        # Zapata
+        # Zapata [cite: 160]
         ax_g.add_patch(plt.Rectangle((0, 0), B, e, color='silver', alpha=0.8, label='Zapata'))
         
         # LÓGICA DE DIBUJO CORREGIDA: e1 (Superior) vs e2 (Inferior)
-        # Referencia: Cara interior (trasdós) en x_base_int
+        # Cara interior (trasdós) como línea de referencia en B-c [cite: 54, 155]
         x_base_int = B - c
-        x_base_ext = x_base_int - e2 # e2 define el ancho en la base
+        x_base_ext = x_base_int - e2 # e2 define el ancho en la base [cite: 85]
         
-        # Coronamiento considerando ángulos alpha 
+        # Coronamiento: se proyecta la cara interior y se resta e1 hacia afuera [cite: 84]
         x_top_int = x_base_int + h_pant * np.tan(np.radians(alpha2))
-        x_top_ext = x_top_int - e1 # Aquí se garantiza que el espesor arriba es e1
+        x_top_ext = x_top_int - e1 
         
         pant_x = [x_base_ext, x_base_int, x_top_int, x_top_ext, x_base_ext]
         pant_y = [e, e, H, H, e]
-        ax_g.fill(pant_x, pant_y, color='darkgray', edgecolor='black', lw=1.5, label=f'Pantalla (G{int(fc_mpa)})')
+        ax_g.fill(pant_x, pant_y, color='darkgray', edgecolor='black', lw=1.5, label=f'Pantalla (G{grado_g})')
         
-        # Suelo Relleno [cite: 114, 116]
+        # Suelo Relleno [cite: 166]
         ax_g.fill_between([x_base_int, B], [e, e], [H, H], color='brown', alpha=0.15, label='Relleno')
         
         ax_g.set_aspect('equal')
@@ -111,14 +119,14 @@ def main():
         
         # Gráfico 1: Armadura Vertical Pantalla (Pág. 23) [cite: 769]
         y_pts = np.linspace(0, h_pant, 10)
-        # Cálculo de armadura por rotura (gamma=1.5) [cite: 756, 761]
+        # Cálculo de armadura por rotura (gamma=1.5) [cite: 756, 761, 762]
         as_muro = []
         for y_val in y_pts:
-            d_local = (e2 - 0.05) * 100 # cm
-            mu = (3.8 * (y_val/h_pant)**2) * 1.5 * 10**5 # kg-cm
+            d_local = (e2 - 0.05) * 100 # cm [cite: 91, 110]
+            mu = (3.8 * (y_val/h_pant)**2) * 1.5 * 10**5 # kg-cm [cite: 759, 761]
             rn = mu / (0.9 * 100 * d_local**2)
             rho = (0.85 * fc_mpa / fy_mpa) * (1 - np.sqrt(1 - (2 * rn) / (0.85 * fc_mpa)))
-            as_val = max(rho * 100 * d_local, (14 / fy_mpa) * 100 * d_local)
+            as_val = max(rho * 100 * d_local, (14 / fy_mpa) * 100 * d_local) # [cite: 762, 766]
             as_muro.append(as_val)
 
         fig_m, ax_m = plt.subplots(figsize=(5, 3.5))
