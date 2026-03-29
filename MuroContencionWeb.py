@@ -108,6 +108,7 @@ def main():
     ax_g.legend(loc='upper left', bbox_to_anchor=(1, 1), title="Componentes")
     
     st.pyplot(fig_g)
+    
 
 
    # --- SECCIÓN 2: ESTABILIDAD (CUATRO FACTORES) ---
