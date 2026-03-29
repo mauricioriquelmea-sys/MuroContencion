@@ -69,18 +69,59 @@ def main():
             (np.cos(delta_rad + theta) * np.cos(i_rad))))**2)
     kas = num_s / den_s
 
-   # --- SECCIÓN 1: REPRESENTACIÓN GEOMÉTRICA ESTRATIGRÁFICA ---
+  # --- SECCIÓN 1: REPRESENTACIÓN GEOMÉTRICA ESTRATIGRÁFICA ---
     st.subheader("📐 Geometría Real y Contexto Geotécnico")
     
-    # Definición de variables de contexto según memoria 
-    hr_val = hr       # Altura relleno interior (sidebar)
-    hre_val = 1.0     # Altura relleno exterior solicitada (fijo 1.0m)
-    i_rad = np.radians(i_deg) # Inclinación relleno interior
+    # Recuperación de variables dinámicas [cite: 80-85, 96-98]
+    hr_val = hr       
+    hre_val = 1.0     
+    i_rad = np.radians(i_deg) 
     
     fig_g, ax_g = plt.subplots(figsize=(12, 6))
     
-    # 1. Suelo de Fundación (y < 0)
+    # 1. Suelo de Fundación (y < 0) - Estrato basal continuo [cite: 121, 141]
     ax_g.add_patch(plt.Rectangle((-1.5, -1), B + 3, 1, color='#efe9db', alpha=0.9, label='Suelo de Fundación'))
+    
+    # 2. Relleno Interior (Rosado) - COBERTURA TOTAL DESDE y=0
+    # Se define el polígono para evitar espacios en blanco bajo el relleno [cite: 166, 218]
+    h_pant = H - e
+    x_base_int = B - c
+    x_top_int = x_base_int + h_pant * np.tan(np.radians(alpha2))
+    x_lim_r = B + 1.2
+    y_lim_r = hr_val + (x_lim_r - x_top_int) * np.tan(i_rad)
+    
+    # Vértices: [base talón, fin gráfico basal, fin gráfico superior inclinado, corona muro, base muro]
+    fill_int_x = [x_base_int, x_lim_r, x_lim_r, x_top_int, x_base_int]
+    fill_int_y = [0, 0, y_lim_r, hr_val, 0]
+    ax_g.fill(fill_int_x, fill_int_y, color='#f2d7d5', alpha=0.6, label='Relleno Interior')
+    
+    # 3. Relleno Exterior (Café Achurado) - Lado Pasivo [cite: 61, 98, 253]
+    x_base_ext = x_base_int - e2
+    ax_g.fill_between([-1.5, x_base_ext], 0, hre_val, 
+                     facecolor='#d5dbdb', alpha=0.5, hatch='///', edgecolor='#85929e', 
+                     label='Relleno Exterior (Pasivo h=1.0m)')
+    
+    # 4. Zapata (Hormigón G25) [cite: 106, 109, 226]
+    ax_g.add_patch(plt.Rectangle((0, 0), B, e, color='silver', alpha=1.0, edgecolor='black', lw=1.2, label='Zapata'))
+    
+    # 5. Pantalla (e1 corona, e2 base) [cite: 84, 85, 144]
+    x_top_ext = x_top_int - e1 
+    pant_x = [x_base_ext, x_base_int, x_top_int, x_top_ext, x_base_ext]
+    pant_y = [e, e, H, H, e]
+    ax_g.fill(pant_x, pant_y, color='darkgray', edgecolor='black', lw=1.5, label=f'Pantalla ({sel_g})')
+    
+    # Configuración de Ejes y Estética Profesional
+    ax_g.set_aspect('equal')
+    ax_g.set_xlim(-1.2, B + 1.2)
+    ax_g.set_ylim(-1.1, max(H, y_lim_r) + 0.5)
+    ax_g.axhline(0, color='black', lw=2.0) # Nivel de Sello de Fundación [cite: 156, 161]
+    ax_g.grid(True, linestyle=':', alpha=0.3)
+    
+    # Leyenda técnica desplazada para despejar la vista del muro [cite: 50]
+    ax_g.legend(loc='upper left', bbox_to_anchor=(1, 1), title="Componentes")
+    
+    st.pyplot(fig_g)
+
     
     # 2. Relleno Interior (Rosado) con pendiente 'i' [cite: 97, 115, 166]
     # Se proyecta desde el trasdós (punto top interior de la pantalla)
