@@ -60,10 +60,22 @@ def main():
     kas = (np.cos(phi_rad - theta)**2) / (np.cos(theta) * np.cos(delta_rad + theta) * (1 + np.sqrt(np.sin(phi_rad + delta_rad) * np.sin(phi_rad - theta) / 
           (np.cos(delta_rad + theta))))**2) # [cite: 383]
 
-    # --- SECCIÓN 1: GEOMETRÍA REAL ---
-    st.subheader("📐 Geometría Real y Desniveles")
-    fig_g, ax_g = plt.subplots(figsize=(10, 5))
-    ax_g.add_patch(plt.Rectangle((0, 0), B, e, color='silver', alpha=0.8, label='Zapata'))
+    
+    # --- SECCIÓN 1: GEOMETRÍA REAL Y CONTEXTO DE SUELO ---
+    st.subheader("📐 Geometría Real y Contexto Geotécnico")
+    
+    # Parámetros adicionales para el contexto (Cap 1.1.3)
+    hre = st.sidebar.number_input("hre: Altura relleno exterior [m]", value=0.8, step=0.1) # [cite: 98, 114]
+    
+    fig_g, ax_g = plt.subplots(figsize=(10, 6))
+    
+    # 1. Estrato de Suelo Bajo la Zapata (Contexto de Fundación)
+    ax_g.add_patch(plt.Rectangle((-1, -1), B + 2, 1, color='#e3d5b8', alpha=0.5, label='Suelo de Fundación'))
+    
+    # 2. Zapata
+    ax_g.add_patch(plt.Rectangle((0, 0), B, e, color='silver', alpha=0.8, edgecolor='black', lw=1, label='Zapata'))
+    
+    # 3. Pantalla corregida (e1 corona, e2 base)
     x_base_int = B - c
     x_base_ext = x_base_int - e2
     x_top_int = x_base_int + h_pant * np.tan(np.radians(alpha2))
@@ -71,20 +83,27 @@ def main():
     pant_x = [x_base_ext, x_base_int, x_top_int, x_top_ext, x_base_ext]
     pant_y = [e, e, H, H, e]
     ax_g.fill(pant_x, pant_y, color='darkgray', edgecolor='black', lw=1.5, label=f'Pantalla ({sel_g})')
-    ax_g.fill_between([x_base_int, B], [e, e], [H, H], color='brown', alpha=0.15, label='Relleno')
     
+    # 4. Relleno Interior (Contención principal) [cite: 116]
+    ax_g.fill_between([x_base_int, B], [e, e], [H, H], color='brown', alpha=0.15, label='Relleno Interior')
+    
+    # 5. Relleno Exterior (Lado opuesto - Pasivo) [cite: 114]
+    # Se dibuja desde el borde exterior de la zapata hasta la pantalla
+    ax_g.fill_between([0, x_base_ext], [e, e], [hre, hre], color='#8da399', alpha=0.3, label='Relleno Exterior (Pasivo)')
+    
+    # Detalles Estéticos y Ejes
     ax_g.set_aspect('equal')
-    ax_g.set_ylim(-0.5, H + 0.5)
-    ax_g.axhline(0, color='black', lw=1.5)
-    ax_g.grid(True, alpha=0.2)
-    # Leyenda fuera del dibujo para no tapar el muro
-    ax_g.legend(loc='upper left', bbox_to_anchor=(1, 1))
+    ax_g.set_xlim(-0.8, B + 0.8)
+    ax_g.set_ylim(-1.2, H + 0.5)
+    ax_g.axhline(0, color='black', lw=1.5) # Nivel de desplante
+    ax_g.grid(True, linestyle=':', alpha=0.4)
+    
+    # Leyenda posicionada estratégicamente
+    ax_g.legend(loc='upper left', bbox_to_anchor=(1, 1), title="Componentes")
+    
     st.pyplot(fig_g)
 
-    st.divider()
 
-
-    
    # --- SECCIÓN 2: ESTABILIDAD (CUATRO FACTORES) ---
     st.subheader("📊 Factores de Seguridad y Estabilidad")
     
@@ -117,8 +136,8 @@ def main():
     
     with t1:
         st.write("**Presión de Contacto**")
-        st.metric("q_max Estático", "6.2 t/m²", f"adm: {sigma_adm_e}") # [cite: 327]
-        st.metric("q_max Sísmico", "8.4 t/m²", f"adm: {sigma_adm_s}") # [cite: 464]
+        st.metric("q_max Estático", "6.2 t/m²", f"adm: {sigma_adm_e}") # 
+        st.metric("q_max Sísmico", "8.4 t/m²", f"adm: {sigma_adm_s}") # 
 
     with t2:
         # Pantalla [cite: 755-769]
