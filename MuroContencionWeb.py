@@ -61,21 +61,22 @@ def main():
           (np.cos(delta_rad + theta))))**2) # [cite: 383]
 
     
-    # --- SECCIÓN 1: GEOMETRÍA REAL Y CONTEXTO DE SUELO ---
+    # --- SECCIÓN 1: GEOMETRÍA REAL Y CONTEXTO GEOTÉCNICO ---
     st.subheader("📐 Geometría Real y Contexto Geotécnico")
     
-    # Parámetros adicionales para el contexto (Cap 1.1.3)
-    hre = st.sidebar.number_input("hre: Altura relleno exterior [m]", value=0.8, step=0.1) # [cite: 98, 114]
+    # Altura relleno exterior desde el sidebar
+    hre_val = hre # Usando el valor ingresado en sidebar [cite: 98]
     
     fig_g, ax_g = plt.subplots(figsize=(10, 6))
     
-    # 1. Estrato de Suelo Bajo la Zapata (Contexto de Fundación)
-    ax_g.add_patch(plt.Rectangle((-1, -1), B + 2, 1, color='#e3d5b8', alpha=0.5, label='Suelo de Fundación'))
+    # 1. Suelo de Fundación (Estrato inferior continuo)
+    # Se dibuja sin línea superior para fundirse con los rellenos
+    ax_g.add_patch(plt.Rectangle((-1, -1), B + 2, 1, color='#efe9db', alpha=0.8, label='Suelo de Fundación'))
     
-    # 2. Zapata
-    ax_g.add_patch(plt.Rectangle((0, 0), B, e, color='silver', alpha=0.8, edgecolor='black', lw=1, label='Zapata'))
+    # 2. Zapata (Hormigón G25)
+    ax_g.add_patch(plt.Rectangle((0, 0), B, e, color='silver', alpha=1.0, edgecolor='black', lw=1.2, label='Zapata'))
     
-    # 3. Pantalla corregida (e1 corona, e2 base)
+    # 3. Pantalla (Geometría según e1 y e2)
     x_base_int = B - c
     x_base_ext = x_base_int - e2
     x_top_int = x_base_int + h_pant * np.tan(np.radians(alpha2))
@@ -84,21 +85,26 @@ def main():
     pant_y = [e, e, H, H, e]
     ax_g.fill(pant_x, pant_y, color='darkgray', edgecolor='black', lw=1.5, label=f'Pantalla ({sel_g})')
     
-    # 4. Relleno Interior (Contención principal) [cite: 116]
-    ax_g.fill_between([x_base_int, B], [e, e], [H, H], color='brown', alpha=0.15, label='Relleno Interior')
+    # 4. Relleno Interior (Lado de la tierra - Color Rojo suave)
+    # Se dibuja desde el trasdós hacia la derecha [cite: 166]
+    ax_g.fill_between([x_base_int, B + 0.8], [e, e], [H, H], color='#f2d7d5', alpha=0.6, label='Relleno Interior')
     
-    # 5. Relleno Exterior (Lado opuesto - Pasivo) [cite: 114]
-    # Se dibuja desde el borde exterior de la zapata hasta la pantalla
-    ax_g.fill_between([0, x_base_ext], [e, e], [hre, hre], color='#8da399', alpha=0.3, label='Relleno Exterior (Pasivo)')
+    # 5. Relleno Exterior (Lado pasivo - Color Café suave)
+    # Se dibuja desde el borde exterior hasta el paramento exterior [cite: 182]
+    ax_g.fill_between([-0.8, x_base_ext], [e, e], [hre_val, hre_val], color='#d5dbdb', alpha=0.7, label='Relleno Exterior (Pasivo)')
     
-    # Detalles Estéticos y Ejes
+    # Configuración de Ejes y Estética
     ax_g.set_aspect('equal')
     ax_g.set_xlim(-0.8, B + 0.8)
-    ax_g.set_ylim(-1.2, H + 0.5)
-    ax_g.axhline(0, color='black', lw=1.5) # Nivel de desplante
-    ax_g.grid(True, linestyle=':', alpha=0.4)
+    ax_g.set_ylim(-1.1, H + 0.5)
     
-    # Leyenda posicionada estratégicamente
+    # Línea de desplante (Base de la zapata)
+    ax_g.axhline(0, color='black', lw=1.8) 
+    
+    # Quitar bordes de los rellenos para que parezcan suelo continuo
+    ax_g.grid(True, linestyle=':', alpha=0.3)
+    
+    # Leyenda posicionada a la derecha fuera del gráfico
     ax_g.legend(loc='upper left', bbox_to_anchor=(1, 1), title="Componentes")
     
     st.pyplot(fig_g)
