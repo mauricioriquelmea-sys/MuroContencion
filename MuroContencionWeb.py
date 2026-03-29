@@ -61,50 +61,63 @@ def main():
           (np.cos(delta_rad + theta))))**2) # [cite: 383]
 
     
-    # --- SECCIÓN 1: GEOMETRÍA REAL Y CONTEXTO GEOTÉCNICO ---
+   # --- SECCIÓN 1: GEOMETRÍA REAL Y CONTEXTO GEOTÉCNICO ---
     st.subheader("📐 Geometría Real y Contexto Geotécnico")
     
-    # Altura relleno exterior desde el sidebar
-    hre_val = hre # Usando el valor ingresado en sidebar [cite: 98]
+    # 1. Recuperar valores del sidebar para el dibujo
+    # Aseguramos que las variables existan para evitar NameError
+    H_val = H
+    B_val = B
+    e_val = e
+    c_val = c
+    e2_val = e2
+    e1_val = e1
     
+    # Altura de rellenos desde la memoria [cite: 96, 98]
+    hr_val = H_val # Relleno interior hasta la corona
+    # Se define hre_val recuperando el input del sidebar (puedes agregarlo al sidebar como hre)
+    # Por defecto usamos 0.8m según pág 5 de memoria [cite: 98]
+    hre_draw = 0.8 
+
     fig_g, ax_g = plt.subplots(figsize=(10, 6))
     
-    # 1. Suelo de Fundación (Estrato inferior continuo)
-    # Se dibuja sin línea superior para fundirse con los rellenos
-    ax_g.add_patch(plt.Rectangle((-1, -1), B + 2, 1, color='#efe9db', alpha=0.8, label='Suelo de Fundación'))
+    # 2. Suelo de Fundación (Estrato inferior continuo)
+    # Representa el terreno bajo el nivel de desplante (y < 0)
+    ax_g.add_patch(plt.Rectangle((-1, -1), B_val + 2, 1, color='#efe9db', alpha=0.8, label='Suelo de Fundación'))
     
-    # 2. Zapata (Hormigón G25)
-    ax_g.add_patch(plt.Rectangle((0, 0), B, e, color='silver', alpha=1.0, edgecolor='black', lw=1.2, label='Zapata'))
+    # 3. Zapata (Hormigón)
+    ax_g.add_patch(plt.Rectangle((0, 0), B_val, e_val, color='silver', alpha=1.0, edgecolor='black', lw=1.2, label='Zapata'))
     
-    # 3. Pantalla (Geometría según e1 y e2)
-    x_base_int = B - c
-    x_base_ext = x_base_int - e2
+    # 4. Pantalla (Geometría exacta e1 corona, e2 base)
+    h_pant = H_val - e_val
+    x_base_int = B_val - c_val
+    x_base_ext = x_base_int - e2_val
     x_top_int = x_base_int + h_pant * np.tan(np.radians(alpha2))
-    x_top_ext = x_top_int - e1 
+    x_top_ext = x_top_int - e1_val 
+    
     pant_x = [x_base_ext, x_base_int, x_top_int, x_top_ext, x_base_ext]
-    pant_y = [e, e, H, H, e]
+    pant_y = [e_val, e_val, H_val, H_val, e_val]
     ax_g.fill(pant_x, pant_y, color='darkgray', edgecolor='black', lw=1.5, label=f'Pantalla ({sel_g})')
     
-    # 4. Relleno Interior (Lado de la tierra - Color Rojo suave)
-    # Se dibuja desde el trasdós hacia la derecha [cite: 166]
-    ax_g.fill_between([x_base_int, B + 0.8], [e, e], [H, H], color='#f2d7d5', alpha=0.6, label='Relleno Interior')
+    # 5. Relleno Interior (Color Rojo suave - Trasdós)
+    # Se extiende desde la cara interior hasta el final del gráfico
+    ax_g.fill_between([x_base_int, B_val + 0.8], [e_val, e_val], [H_val, H_val], color='#f2d7d5', alpha=0.6, label='Relleno Interior')
     
-    # 5. Relleno Exterior (Lado pasivo - Color Café suave)
-    # Se dibuja desde el borde exterior hasta el paramento exterior [cite: 182]
-    ax_g.fill_between([-0.8, x_base_ext], [e, e], [hre_val, hre_val], color='#d5dbdb', alpha=0.7, label='Relleno Exterior (Pasivo)')
+    # 6. Relleno Exterior (Color Café/Gris suave - Pasivo)
+    # Se dibuja desde el borde izquierdo hasta la cara exterior de la pantalla
+    ax_g.fill_between([-0.8, x_base_ext], [e_val, e_val], [hre_draw, hre_draw], color='#d5dbdb', alpha=0.7, label='Relleno Exterior (Pasivo)')
     
     # Configuración de Ejes y Estética
     ax_g.set_aspect('equal')
-    ax_g.set_xlim(-0.8, B + 0.8)
-    ax_g.set_ylim(-1.1, H + 0.5)
+    ax_g.set_xlim(-0.8, B_val + 0.8)
+    ax_g.set_ylim(-1.1, H_val + 0.5)
     
-    # Línea de desplante (Base de la zapata)
+    # Línea de desplante (Base de la zapata en y=0)
     ax_g.axhline(0, color='black', lw=1.8) 
     
-    # Quitar bordes de los rellenos para que parezcan suelo continuo
     ax_g.grid(True, linestyle=':', alpha=0.3)
     
-    # Leyenda posicionada a la derecha fuera del gráfico
+    # Leyenda posicionada a la derecha fuera del gráfico para no tapar el muro
     ax_g.legend(loc='upper left', bbox_to_anchor=(1, 1), title="Componentes")
     
     st.pyplot(fig_g)
