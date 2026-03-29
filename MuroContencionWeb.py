@@ -23,7 +23,7 @@ def main():
             st.image("F1.jpg", use_container_width=True)
         
         st.header("💎 Especificaciones de Materiales")
-        with st.expander("Calidades Normativas (NCh 170 / A63)", expanded=True):
+        with st.expander("Calidades de Materiales", expanded=True):
             dict_g = {f"G{v}": float(v) for v in [17, 20, 25, 30, 35, 40, 45, 50]}
             sel_g = st.selectbox("Grado Hormigón (G)", list(dict_g.keys()), index=2)
             fc_mpa = dict_g[sel_g]
